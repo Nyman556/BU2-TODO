@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gruppÖvning_TODO;
@@ -14,6 +16,22 @@ public class CreateTodoDto
     }
 }
 
+public class TodoDto
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
+    public bool Completed { get; set; }
+
+    public TodoDto(Todo todo)
+    {
+        this.Id = todo.Id;
+        this.Title = todo.Title;
+        this.Description = todo.Description;
+        this.Completed = todo.Completed;
+    }
+}
+
 [ApiController]
 [Route("todo")]
 public class CreateTodoController : ControllerBase
@@ -26,15 +44,20 @@ public class CreateTodoController : ControllerBase
     }
 
     [HttpPost("add")]
+    [Authorize("create_todos")]
     public IActionResult CreateTodo([FromBody] CreateTodoDto dto)
     {
-        Todo? todo = todoService.CreateTodo(dto.Title, dto.Description);
-
-        if (dto == null)
+        try
+        {
+            var id = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            Todo todo = todoService.CreateTodo(dto.Title, dto.Description, id);
+            TodoDto output = new TodoDto(todo);
+            return Ok(output);
+        }
+        catch (ArgumentException)
         {
             return BadRequest();
         }
-        return Ok(todo);
     }
 
     [HttpGet("alltodos")]

@@ -1,5 +1,5 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace gruppÖvning_TODO;
@@ -27,9 +27,25 @@ public class Program
         builder.Services.AddDbContext<TodoDbContext>(options =>
         {
             options.UseNpgsql(
-                "Host=localhost;Database=tododatabase;Username=postgres;Password=newPassword"
+                "Host=localhost;Database=tododatabase;Username=postgres;Password=NewPassword"
             );
         });
+        builder.Services.AddAuthentication().AddBearerToken(IdentityConstants.BearerScheme);
+        builder.Services.AddAuthorization(options =>
+        {
+            options.AddPolicy(
+                "create_todo",
+                policy =>
+                {
+                    policy.RequireAuthenticatedUser();
+                }
+            );
+        });
+
+        builder
+            .Services.AddIdentityCore<User>()
+            .AddEntityFrameworkStores<TodoDbContext>()
+            .AddApiEndpoints();
 
         builder.Services.AddControllers(); //behövs för att hantera controllers
 
@@ -37,7 +53,10 @@ public class Program
         builder.Services.AddScoped<TodoService, TodoService>();
         var app = builder.Build();
 
+        app.MapIdentityApi<User>();
         app.MapControllers(); // här mappar vi ut alla controllers
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.UseHttpsRedirection();
 
         app.Run();

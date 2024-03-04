@@ -9,15 +9,21 @@ public class TodoService
         this.context = context;
     }
 
-    public Todo? CreateTodo(string title, string description)
+    public Todo? CreateTodo(string title, string description, string id)
     {
         if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(description))
         {
             throw new ArgumentException("input must not be null or empty");
         }
 
-        Todo? todo = new Todo(title, description);
+        User? user = context.Users.Find(id);
+        if (user == null)
+        {
+            throw new ArgumentException("No such user.");
+        }
+        Todo todo = new Todo(title, description, user);
         context.Todos.Add(todo);
+        user.Todos.Add(todo);
         context.SaveChanges();
         return todo;
     }

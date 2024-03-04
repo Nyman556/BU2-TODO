@@ -1,8 +1,9 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace gruppÖvning_TODO;
 
-public class TodoDbContext : DbContext
+public class TodoDbContext : IdentityDbContext<User>
 {
     public DbSet<Todo> Todos { get; set; }
 
